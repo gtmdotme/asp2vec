@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+batch_*.pkl
+.ipynb_checkpoints/
+walks.pkl
