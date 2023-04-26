@@ -1,7 +1,6 @@
 import torch
 from collections import defaultdict
 import random
-random.seed(0)
 import os
 from utils import *
 import pickle as pkl
@@ -18,6 +17,8 @@ from os import path
 
 class embedder:
     def __init__(self, args):
+        self.seed = args.seed
+        self.dataset_seed = args.dataset_seed
         self.embedder = args.embedder
         self.dataset = args.dataset
         self.iter_max = args.iter_max
@@ -43,7 +44,7 @@ class embedder:
         if self.gpu_num == -1:
             self.device = "cpu"
         else:
-            self.device = torch.device("cuda:" + str(self.gpu_num) if torch.cuda.is_available() else "cpu")
+            self.device = torch.device(f"cuda:{self.gpu_num}" if torch.cuda.is_available() else "cpu")
         args.device = self.device
 
         self.isSoftmax = args.isSoftmax
@@ -55,38 +56,40 @@ class embedder:
                 self.isHard = args.isHard
 
         folder_dataset = os.path.join(os.path.dirname(os.getcwd()), 'data', self.dataset)
-        fn_data = os.path.join(folder_dataset, 'data_remove_percent_{}.pkl'.format(self.remove_percent))
+        fn_data = os.path.join(folder_dataset, 'data_remove_percent_{}_seed_{}.pkl'.format(self.remove_percent, self.dataset_seed))
         self.folder_dataset = folder_dataset
 
-        # build graph
+        # read data and build graph
         print("Reading {}".format(fn_data))
         data = pkl.load(open(fn_data, "rb"))
         self.train_edges = data['train_edges']
         self.num_nodes = data['num_nodes']
-
-        # Read graph data
-        self.G = load_edgelist(self.train_edges, data['isDirected'])
-        self.G.num_nodes = data['num_nodes']
+        self.G = Graph()
+        self.G = self.G.load_edgelist(self.train_edges, data['isDirected'])
+        self.G.num_nodes = self.G.get_num_nodes() # data['num_nodes']
+        self.G.num_edges = self.G.get_num_edges()
         self.isDirected = data['isDirected']
         print("[{}] Num Nodes: {}, Num Edges: {}".format(self.dataset, self.num_nodes, len(self.train_edges)))
-
+        
         args.num_nodes = data['num_nodes']
         self.early_stop = 0
         self.data = data
         self.args = args
-        self.batch_path = '{}/rm_{}_batch_bn_{}_nw_{}_pl_{}_ws_{}_neg_{}'\
+        self.batch_path = '{}/rm_{}_batch_bn_{}_nw_{}_pl_{}_ws_{}_neg_{}_seed_{}'\
             .format(self.folder_dataset, self.remove_percent, self.batch_size,
-                    self.num_walks_per_node, self.path_length, self.window_size, self.num_neg)
+                    self.num_walks_per_node, self.path_length, self.window_size, 
+                    self.num_neg, self.dataset_seed)
 
         pathlib.Path(self.batch_path).mkdir(parents=True, exist_ok=True)
 
-        walk_path = "{}/walks.pkl".format(self.batch_path)
+        walk_path = "{}/walks_seed_{}.pkl".format(self.batch_path, self.dataset_seed)
         if path.exists(walk_path):
             print("[{}] Loading walks from {}...".format(currentTime(), walk_path))
             walks = pkl.load(open(walk_path, "rb"))
         else:
             print("[{}] Generating walks...".format(currentTime()))
-            walks = self.generate_walks(self.G, num_walks=self.num_walks_per_node)
+            walks = self.generate_walks(self.G, num_walks=self.num_walks_per_node, 
+                                        random_state=self.seed)
             print("[{}] Saving walks to {}...".format(currentTime(), walk_path))
             pkl.dump(walks, open(walk_path, "wb"))
 
@@ -95,14 +98,15 @@ class embedder:
         self.saved_model_asp2vec = []
         self.walks = walks
 
-    def generate_walks(self, G, num_walks):
+    def generate_walks(self, G, num_walks, random_state=0):
         walks = []
         nodes = sorted(list(G.nodes()))
         print("Total number of nodes: {}".format(G.num_nodes))
 
+        randGen = random.Random(random_state)
         for cnt in range(num_walks):
             for node in nodes:
-                path = G.random_walk(self.path_length, start=node)
+                path = G.random_walk(self.path_length, randGen, start=node)
                 walks.append(path)
 
         return walks
@@ -259,6 +263,7 @@ class Graph(defaultdict):
     def __init__(self):
         super().__init__(list)
         self.num_nodes = 0
+        self.num_edges = 0
 
     def onehot_encoder(self, nodes):
         row = np.zeros(self.num_nodes)
@@ -269,7 +274,12 @@ class Graph(defaultdict):
 
     def nodes(self):
         return self.keys()
+    
+    def get_num_nodes(self):
+        return len(self.keys())
 
+    def get_num_edges(self):
+        return sum([len(self[node]) for node in self])
 
     def remove_self_loops(self):
         for x in self:
@@ -282,30 +292,35 @@ class Graph(defaultdict):
         for node in test_data:
             self[node].remove(test_data[node][0])
 
-    def random_walk(self, path_length, rand = random.Random(), start = None):
+    # ref: https://stackoverflow.com/a/53783896
+    def random_walk(self, path_length, randGen, start = None):
         G = self
         path = [start]
         while len(path) < path_length:
             cur = path[-1]
             if len(G[cur]) > 0:
-                node_new = rand.choice(G[cur])
+                node_new = randGen.choice(G[cur])
                 path.append(node_new)
             else:
                 break
 
         return path
 
-def load_edgelist(edges, isDirected):
-    G = Graph()
-    for edge in edges:
-        node1 = edge[0]
-        node2 = edge[1]
+    def load_edgelist(self, edges, isDirected):
+        """
+        Initialize a graph object (custom `defaultdict` as defined above) from an edge list
+        """
+        # G = Graph()
+        for edge in edges:
+            node1 = edge[0]
+            node2 = edge[1]
 
-        G[node1].append(node2)
+            self[node1].append(node2)
 
-        if not isDirected:
-            if node1 not in G[node2]:
-                G[node2].append(node1)
+            # if undirected, add the other direction too
+            if not isDirected:
+                if node1 not in self[node2]:
+                    self[node2].append(node1)
 
-    return G
+        return self
 

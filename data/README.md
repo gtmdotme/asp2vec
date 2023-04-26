@@ -107,7 +107,21 @@ Size of test_edges: 1776
 Size of test_edges_neg: 1776
 Saved to cora/data_remove_percent_0.5_seed_0.pkl
 
--python create_dataset.py --input epinions --directed --seed 0
+$ python create_dataset.py --input epinions --directed --seed 0
+# Output:
+Namespace(directed=True, input='epinions', remove_percent=0.5, seed=0)
+Reading graph from epinions/edges.txt
+Create epinions dataset (Remove percent: 0.5)
+Generate dataset for link prediction
+Pruning edges:  62%|███████████████████████████████████▏                     | 300276/487182 [1:10:26<38:56, 79.98it/s]breaking
+Pruning edges:  62%|███████████████████████████████████▏                     | 300280/487182 [1:10:26<43:50, 71.04it/s]
+removed edges percentage:  0.5
+Size of train_edges: 243591
+Size of train_negatives: 243591
+Size of test_edges: 243591
+Size of test_edges_neg: 243591
+Size of test_edges_neg_directed: 518660
+Saved to epinions/data_remove_percent_0.5_seed_0.pkl
 
 $ python create_dataset.py --input filmtrust --directed --seed 0
 # Output:
@@ -124,7 +138,20 @@ Size of test_edges_neg: 546
 Size of test_edges_neg_directed: 1179
 Saved to filmtrust/data_remove_percent_0.5_seed_0.pkl
 
--python create_dataset.py --input flickr --seed 0
+$ python create_dataset.py --input flickr --seed 0
+# Output:
+Namespace(directed=False, input='flickr', remove_percent=0.5, seed=0)
+Reading graph from flickr/edges.txt
+Create flickr dataset (Remove percent: 0.5)
+Generate dataset for link prediction
+Pruning edges:  52%|███████████████████████████▏                        | 3086901/5899882 [2:35:17<2:14:06, 349.58it/s]breaking
+Pruning edges:  52%|███████████████████████████▏                        | 3087000/5899882 [2:35:17<2:21:29, 331.32it/s]
+removed edges percentage:  0.5000101696949193
+Size of train_edges: 2949881
+Size of train_negatives: 2949881
+Size of test_edges: 2950001
+Size of test_edges_neg: 2950001
+Saved to flickr/data_remove_percent_0.5_seed_0.pkl
 
 $ python create_dataset.py --input ppi --seed 0
 # Output:
@@ -184,3 +211,5 @@ Once the above commands generate ````data_remove_percent_0.5_seed_0.pkl````, we 
     - ````train_edges````: positive edges in the training data, ````train_edges_neg````: negative edges in the training data
     - ````test_edges````: positive edges in the test data, ````test_edges_neg````: negative edges in the test data
 
+
+Also available [here](https://purdue0-my.sharepoint.com/:f:/g/personal/gchoudha_purdue_edu/Euo87684H0xFoy6cL3nGeYAB4P5uGNzUxyrVZfNuGkWC-A?e=wcE16j) to download and use.

@@ -4,3 +4,7 @@ __pycache__/
 batch_*.pkl
 .ipynb_checkpoints/
 walks.pkl
+
+data/flickr/data_remove_percent*.pkl
+data/epinions/data_remove_percent*.pkl
+data/*/rm_*

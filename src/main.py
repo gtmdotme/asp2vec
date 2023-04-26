@@ -1,20 +1,26 @@
 import numpy as np
-np.random.seed(0)
 import random
-random.seed(0)
 import torch
-torch.autograd.set_detect_anomaly(True)
-torch.manual_seed(0)
-torch.cuda.manual_seed_all(0)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
 import argparse
+
+def seed_everything(seed=0):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    torch.autograd.set_detect_anomaly(True)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    return
 
 def parse_args():
     # input arguments
     parser = argparse.ArgumentParser(description='asp2vec')
 
     # Essential parameters
+    parser.add_argument('--seed', type=int, default=0, help="Seed for reproducibility")
+    parser.add_argument('--dataset_seed', type=int, default=0, help="Seed for choosing dataset")
     parser.add_argument('--embedder', nargs='?', default='asp2vec')
     parser.add_argument('--dataset', nargs='?', default='filmtrust')
     parser.add_argument('--lr', type=float, default=0.003, help="Learning rate")
@@ -50,6 +56,7 @@ def parse_args():
 
     return parser.parse_known_args()
 
+# not used
 def printConfig(args):
     args_names = []
     args_vals = []
@@ -62,6 +69,9 @@ def printConfig(args):
 def main():
     args, unknown = parse_args()
     print(args)
+
+    seed_everything(args.seed)
+
     if args.embedder == 'asp2vec':
         from models import asp2vec
         embedder = asp2vec(args)
