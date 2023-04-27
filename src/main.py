@@ -75,6 +75,12 @@ def main():
     if args.embedder == 'asp2vec':
         from models import asp2vec
         embedder = asp2vec(args)
+    elif args.embedder == 'node2vec':
+        from models import node2vec_model
+        embedder = node2vec_model(args)
+    elif args.embedder == 'deepwalk':
+        from models import deepwalk_model
+        embedder = deepwalk_model(args)
 
     embedder.training()
 

@@ -105,6 +105,7 @@ class embedder:
 
         randGen = random.Random(random_state)
         for cnt in range(num_walks):
+            randGen.shuffle(nodes)
             for node in nodes:
                 path = G.random_walk(self.path_length, randGen, start=node)
                 walks.append(path)
@@ -245,7 +246,7 @@ class embedder:
         train_neg = emb[train_eval_negatives[:, 0]] * emb[train_eval_negatives[:, 1]]
         train_X = np.concatenate((train_pos, train_neg))
         train_y = [1] * len(train_pos) + [0] * len(train_pos)
-        classifier = LogisticRegression(random_state=0)
+        classifier = LogisticRegression(random_state=self.seed)
         classifier.fit(train_X, train_y)
 
         test_pos = emb[test_edges[:, 0]] * emb[test_edges[:, 1]]
