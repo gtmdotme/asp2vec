@@ -1,4 +1,4 @@
-### Exploring Node Polysemy in Networks
+## Exploring Node Polysemy in Networks
 
 ### Project Report 
  - [PDF](./ProjectReport.pdf)
