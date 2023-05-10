@@ -1,5 +1,7 @@
 ### Exploring Node Polysemy in Networks
 
+### Project Report 
+ - [PDF](./ProjectReport.pdf)
 
 ### Papers
 - [ **Unsupervised Differentiable Multi-aspect Network Embedding (*KDD 2020*)** ](https://arxiv.org/abs/2006.04239)
@@ -9,9 +11,9 @@
 ### Requirements
 - Python version: 3.9
 - Pytorch version: 2.0
-- fastrand (Fast random number generation in Python) (https://github.com/lemire/fastrand)
+- [fastrand](https://github.com/lemire/fastrand) (Fast random number generation in Python)
 - scikit-learn
-- Node2vec
+- [Node2vec](https://github.com/eliorc/node2vec)
 
 ### How to Run
 ````
